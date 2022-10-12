@@ -1,12 +1,10 @@
-from fastapi import HTTPException, Depends, APIRouter
+from fastapi import HTTPException, Depends, APIRouter, status
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from typing import List, Union
-from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel
 from app.util import crud, schemas
 from sqlalchemy.orm import Session
 from ..dependencies import get_db
