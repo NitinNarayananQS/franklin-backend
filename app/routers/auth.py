@@ -8,7 +8,7 @@ from app.schemas.token import Token
 from app.schemas.user import User, UserCreate
 from app.controllers import user_controller as crud
 from app.dependencies import get_db
-from app.services.auth_service import authenticate_user, create_access_token, get_current_active_user, get_db
+from app.util.auth_util import authenticate_user, create_access_token, get_current_active_user, get_db
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
