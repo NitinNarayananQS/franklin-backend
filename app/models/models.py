@@ -1,8 +1,6 @@
-from email.policy import default
-from enum import unique
 from sqlalchemy import Boolean, Column, Integer, String
-from .db import Base
 
+from app.util.db import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -13,3 +11,4 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     role = Column(String, default="dev")
+    
