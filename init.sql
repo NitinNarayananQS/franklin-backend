@@ -1,0 +1,2 @@
+DROP DATABASE IF EXISTS dagster_test;
+CREATE DATABASE dagster_test;
