@@ -31,3 +31,9 @@ def delete_user_by_username(db: Session, username: str):
     res = db.query(User).filter(User.username == username).delete()
     db.commit()
     return res
+
+def update_user_password(db: Session, new_password: str, username: str):
+    new_hashed_password = get_password_hash(new_password)
+    res = db.query(User).filter(User.username == username).update({User.hashed_password: new_hashed_password})
+    db.commit()
+    return res

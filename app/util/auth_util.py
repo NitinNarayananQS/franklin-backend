@@ -5,14 +5,19 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+import smtplib
+import os
+from dotenv import load_dotenv
 
 from app.dependencies import get_db
 from app.schemas.token import TokenData
 from app.schemas.user import User
 from app.controllers import user_controller as crud
 
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-ALGORITHM = "HS256"
+env = load_dotenv()
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+ALGORITHM = os.getenv('ALGORITHM')
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -76,3 +81,12 @@ async def get_current_active_user(
     #     raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+async def send_email(email: str, reset_token: str):
+    load_dotenv()
+    s = smtplib.SMTP('smtp.gmail.com', 587)
+    s.starttls()
+    s.login(os.getenv('MAIL_USERNAME'), os.getenv('MAIL_PASSWORD'))
+    body = str('Your reset token is ' + reset_token)
+    s.sendmail(os.getenv('MAIL_FROM'), email, body)
+    s.quit()
+    

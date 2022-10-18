@@ -3,16 +3,22 @@ version: '3.7'
 services:
   backend_service:
     build: .
-    command: uvicorn app.main:app --host 0.0.0.0 --port 80
+    command: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload
     volumes:
       - .:/usr/src/dagster
+    working_dir: /usr/src/dagster
     environment:
+      - MAIL_USERNAME=franklinserviceqs
+      - MAIL_PASSWORD=
+      - MAIL_FROM=franklinserviceqs@gmail.com
       - SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - ALGORITHM=HS256
     ports:
       - 80:80
     depends_on:
       db:
         condition: service_healthy
+    restart: on-failure
 
   db:
     image: postgres:12.0-alpine

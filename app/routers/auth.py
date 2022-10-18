@@ -1,15 +1,17 @@
+import os
 from fastapi import HTTPException, Depends, APIRouter, status
 from datetime import timedelta
 from typing import List
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 
 from app.schemas.token import Token
-from app.schemas.user import User, UserCreate, ForgotPass
+from app.schemas.user import ResetPass, User, UserCreate, ForgotPass
 from app.controllers import user_controller as crud
 from app.dependencies import get_db
-from app.util.auth_util import authenticate_user, create_access_token, get_current_active_user, get_db
+from app.util.auth_util import authenticate_user, create_access_token, get_current_active_user, get_db, send_email
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -39,7 +41,7 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/me", response_model=User)
+@router.get("/current_user", response_model=User)
 async def get_logged_in_user(
     current_user: User = Depends(get_current_active_user),
 ):
@@ -76,9 +78,31 @@ async def forgot_password(req: ForgotPass, db: Session = Depends(get_db)):
   
     reset_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     reset_token = create_access_token(
-        data={"id": user.id}, expires_delta=reset_token_expires
+        data={"username": user.username}, expires_delta=reset_token_expires
     )    
+    await send_email(email=email, reset_token=reset_token)
     return {
-        "url": "http://localhost:8000/reset/" + reset_token
+        "message": "reset token was sent to the provided email"
+    }
+    
+@router.post("/resetpassword")
+async def reset_password(req: ResetPass, db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(req.reset_token, os.getenv('SECRET_KEY'), algorithms=[os.getenv('ALGORITHM')])
+        username: str = payload.get("username")
+        if username is None:
+            raise HTTPException(status_code=404, detail="Invalid Reset Token")
+        user = crud.get_user_by_username(db, username=username)
+        if user is None:
+            raise HTTPException(status_code=404, detail="Invalid Reset Token, a matching user was not found")
+        res = crud.update_user_password(db, req.new_password, username)
+        if res:
+            return {
+                "message": "password was reset"
+            }
+    except JWTError:
+        raise HTTPException(status_code=400, detail="JWT decode error")
+    return {
+        "message": "an error occured during password reset"
     }
     
